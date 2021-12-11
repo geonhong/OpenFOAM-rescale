@@ -1,39 +1,54 @@
 #!/usr/bin/env python3
 
 import os, sys
+import argparse
 
 from math import pi
 
-argv = sys.argv[1:]
+parser = argparse.ArgumentParser(description='Average the forces and moments')
+parser.add_argument('--nSamples', 
+                    metavar='N',
+                    type=int, 
+                    default=720,
+                    help='number of samples to take average')
+parser.add_argument('--forcename', 
+                    metavar='word',
+                    type=str,
+                    default='forces',
+                    help='the name of force and moment to measure')
+parser.add_argument('--timename', 
+                    metavar='N',
+                    type=str,
+                    default='0',
+                    help='the initial time of force and moment')
 
-nSamples = 720
-if '-nSamples' in argv:
-    i = argv.index('-nSamples')
-    nSamples = int(argv[i+1])
+args = parser.parse_args()
 
-if '-rpm' in argv:
-    i = argv.index('-rpm')
-    rpm = float(argv[i+1])
-    omg = rpm/60*2*pi
+forceName = args.forcename
+timeName = args.timename
 
-forceName = 'forces'
-if '-forceName' in argv:
-    i = argv.index('-forceName')
-    forceName = argv[i+1]
-
-timeName = '0'
-if '-timeName' in argv:
-    i = argv.index('-timeName')
-    timeName = argv[i+1]
-
-forceFile = open('postProcessing/' + forceName + '/' + timeName + '/force.dat', 'r')
-momentFile = open('postProcessing/' + forceName + '/' + timeName + '/moment.dat', 'r')
+forceFile = open('postProcessing/'+forceName+'/'+timeName+'/force.dat', 'r')
+momentFile = open('postProcessing/'+forceName+'/'+timeName+'/moment.dat', 'r')
 
 forceData = forceFile.readlines()
 momentData = momentFile.readlines()
 
-fsum = 0.0
-msum = 0.0
+fxsum = 0.0
+fysum = 0.0
+fzsum = 0.0
+mxsum = 0.0
+mysum = 0.0
+mzsum = 0.0
+nSamples = args.nSamples
+
+# Print summary
+print('''
+Average the forces and moments
+------------------------------
+- force name: ''' + forceName + '''
+- time name : ''' + timeName + '''
+- Samples   : ''' + str(nSamples) + '''
+''')
 
 omg = 0.0
 
@@ -47,21 +62,30 @@ for i in range(1, nSamples+1):
 
     f = f.replace('(','').replace(')','').split()
     fx = float(f[1])
+    fy = float(f[2])
     fz = float(f[3])
-    fsum += fx
+    fxsum += fx
+    fysum += fy
+    fzsum += fz
 
     m = m.replace('(','').replace(')','').split()
     mx = float(m[1])
+    my = float(m[2])
     mz = float(m[3])
-    msum += mx
+    mxsum += mx
+    mysum += my
+    mzsum += mz
 
-fave = fsum/nSamples
-mave = msum/nSamples
+fxave = fxsum/nSamples
+fyave = fysum/nSamples
+fzave = fzsum/nSamples
+mxave = mxsum/nSamples
+myave = mysum/nSamples
+mzave = mzsum/nSamples
 
-print('Averaged force : ', fave, ' N')
-print('Averaged moment: ', mave, ' N-m')
-
-if omg>0.0:
-    P = mave*omg
-    print('Averaged power : ', P, ' W')
-
+print('Averaged Fx : ', fxave, ' N')
+print('Averaged Fy : ', fyave, ' N')
+print('Averaged Fz : ', fzave, ' N')
+print('Averaged Mx : ', mxave, ' N-m')
+print('Averaged My : ', myave, ' N-m')
+print('Averaged Mz : ', mzave, ' N-m')
